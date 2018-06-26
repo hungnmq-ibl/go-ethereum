@@ -27,7 +27,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/p2p"
 	"github.com/ethereum/go-ethereum/rlp"
-	"gopkg.in/fatih/set.v0"
 )
 
 var (
@@ -37,7 +36,7 @@ var (
 )
 
 const (
-	maxKnownTxs    = 32768 // Maximum transactions hashes to keep in the known list (prevent DOS)
+	maxKnownTxs    = 60000 // Maximum transactions hashes to keep in the known list (prevent DOS)
 	maxKnownBlocks = 1024  // Maximum block hashes to keep in the known list (prevent DOS)
 
 	// maxQueuedTxs is the maximum number of transaction lists to queue up before
@@ -187,6 +186,7 @@ func (p *peer) MarkBlock(hash common.Hash) {
 // will never be propagated to this particular peer.
 func (p *peer) MarkTransaction(hash common.Hash) {
 	// If we reached the memory allowance, drop a previously known transaction hash
+	// Khi số tx hiện tại lớn bằng maxKnownTxs thì pop các tx trước đó đã biết trong stack ra ngoài
 	for p.knownTxs.Size() >= maxKnownTxs {
 		p.knownTxs.Pop()
 	}
