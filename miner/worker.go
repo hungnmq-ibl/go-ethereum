@@ -385,6 +385,7 @@ func (self *worker) makeCurrent(parent *types.Block, header *types.Header) error
 }
 
 func (self *worker) commitNewWork() {
+	fmt.Println("Starting in commitNewWork: ", time.Now())
 	self.mu.Lock()
 	defer self.mu.Unlock()
 	self.uncleMu.Lock()
@@ -488,6 +489,7 @@ func (self *worker) commitNewWork() {
 	}
 	self.push(work)
 	self.updateSnapshot()
+	fmt.Println("Ending in commitNewWork: ", time.Now())
 }
 
 func (self *worker) commitUncle(work *Work, uncle *types.Header) error {
@@ -519,6 +521,7 @@ func (self *worker) updateSnapshot() {
 }
 
 func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsByPriceAndNonce, bc *core.BlockChain, coinbase common.Address) {
+	fmt.Println("Starting in commitTransactions: ", time.Now())
 	if env.gasPool == nil {
 		env.gasPool = new(core.GasPool).AddGas(env.header.GasLimit)
 	}
@@ -601,11 +604,13 @@ func (env *Work) commitTransactions(mux *event.TypeMux, txs *types.TransactionsB
 			}
 		}(cpy, env.tcount)
 	}
+	fmt.Println("Ending in commitTransactions: ", time.Now())
 }
 
 func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, coinbase common.Address, gp *core.GasPool) (error, []*types.Log) {
+	fmt.Println("Starting in commitTransaction: ", time.Now())
 	snap := env.state.Snapshot()
-
+	
 	receipt, _, err := core.ApplyTransaction(env.config, bc, &coinbase, gp, env.state, env.header, tx, &env.header.GasUsed, vm.Config{})
 	if err != nil {
 		env.state.RevertToSnapshot(snap)
@@ -613,6 +618,6 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	}
 	env.txs = append(env.txs, tx)
 	env.receipts = append(env.receipts, receipt)
-
+	fmt.Println("Ending in commitTransaction: ", time.Now())
 	return nil, receipt.Logs
 }

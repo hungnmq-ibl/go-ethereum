@@ -20,6 +20,8 @@ import (
 	"errors"
 	"math"
 	"math/big"
+	"fmt"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -129,6 +131,7 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
 func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, error) {
+	fmt.Println("Starting in ApplyMessage: ", time.Now())
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }
 
@@ -181,6 +184,7 @@ func (st *StateTransition) preCheck() error {
 // returning the result including the the used gas. It returns an error if it
 // failed. An error indicates a consensus issue.
 func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
+	fmt.Println("Starting in TransitionDb: ", time.Now())
 	if err = st.preCheck(); err != nil {
 		return
 	}
@@ -210,6 +214,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	} else {
 		// Increment the nonce for the next transaction
 		st.state.SetNonce(msg.From(), st.state.GetNonce(sender.Address())+1)
+
 		ret, st.gas, vmerr = evm.Call(sender, st.to(), st.data, st.gas, st.value)
 	}
 	if vmerr != nil {
@@ -223,7 +228,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	}
 	st.refundGas()
 	st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
-
+	fmt.Println("Ending in TransitionDb: ", time.Now())
 	return ret, st.gasUsed(), vmerr != nil, err
 }
 
